@@ -3,23 +3,29 @@ package tk.taverncraft.quicktax.utils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
-
 import me.clip.placeholderapi.PlaceholderAPI;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
-
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import me.ryanhamshire.GriefPrevention.PlayerData;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
-
 import org.bukkit.scheduler.BukkitRunnable;
 import tk.taverncraft.quicktax.Main;
+import com.massivecraft.factions.entity.Faction;
+import com.massivecraft.factions.entity.MPlayer;
+import com.massivecraft.factions.entity.MPlayerColl;
+import com.massivecraft.massivecore.store.SenderEntity;
+import com.massivecraft.massivecore.Named;
+
 
 /**
  * TaxManager handles all logic and action for collecting tax from players.
  */
+
 public class TaxManager {
     public static boolean isCollecting;
     public static Runnable task;
@@ -530,6 +536,61 @@ public class TaxManager {
             }.runTask(main);
         }
     }
+
+    public void depositFactionTax(CommandSender sender) {
+        Main plugin = Main.getInstance();
+        FileConfiguration config = plugin.getConfig();
+        double taxPercentage = config.getDouble("faction-tax.tax-percentage", 0.10);
+        boolean usePercentage = config.getBoolean("faction-tax.use-percentage", true);
+        int debtMode = config.getInt("faction-tax.debt-mode", 0);
+
+    
+        Arrays.stream(plugin.getServer().getOfflinePlayers()).forEach(offlinePlayer -> {
+            if (isTaxExempt(offlinePlayer, exemptCollectAllPerm)) {
+                return;
+            }
+            double playerBal = Main.getEconomy().getBalance(offlinePlayer);
+            double taxAmount = usePercentage ? playerBal * taxPercentage : taxPercentage;
+    
+            // Rounding the tax amount
+            taxAmount = new BigDecimal(taxAmount).setScale(2, RoundingMode.HALF_UP).doubleValue();
+    
+            if (taxAmount > playerBal) {
+                switch (debtMode) {
+                    case 0:
+                        return; // Exempt if debt mode is 0
+                    case 1:
+                        taxAmount = playerBal; // Tax all current balance
+                        break;
+                    case 2:
+                        // Allow negative balance
+                        break;
+                }
+            }
+    
+            MPlayer mPlayer = MPlayer.get(offlinePlayer);
+            if (mPlayer.hasFaction()) {
+                Faction faction = mPlayer.getFaction();
+                faction.deposit(null, taxAmount);
+                Main.getEconomy().withdrawPlayer(offlinePlayer, taxAmount);
+    
+                // Optionally notify the player about the tax
+                if (offlinePlayer.isOnline()) {
+                    Player onlinePlayer = (Player) offlinePlayer;
+                    if (plugin.getPluginConfig().getBoolean("enable-sound", true)) {
+                        String soundName = plugin.getPluginConfig().getString("play-sound", "ENTITY_PLAYER_LEVELUP");
+                        try {
+                            onlinePlayer.playSound(onlinePlayer.getLocation(), soundName, 1.0f, 1.0f);
+                        } catch (IllegalArgumentException e) {
+                            plugin.getLogger().warning("Invalid sound name in configuration: " + soundName);
+                        }
+                    }
+                    onlinePlayer.sendMessage("A tax of " + taxAmount + " has been deposited to your faction.");
+                }
+            }
+        });
+    }
+    
 
     /**
      * Interface to determine what type of update to run.

@@ -13,14 +13,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.permission.Permission;
-
 import tk.taverncraft.quicktax.commands.CommandParser;
 import tk.taverncraft.quicktax.commands.CommandTabCompleter;
 import tk.taverncraft.quicktax.events.DependencyLoadEvent;
 import tk.taverncraft.quicktax.events.SignBreakEvent;
 import tk.taverncraft.quicktax.events.SignPlaceEvent;
 import tk.taverncraft.quicktax.storage.StorageManager;
-import tk.taverncraft.quicktax.utils.*;
+import tk.taverncraft.quicktax.utils.Metrics;
+import tk.taverncraft.quicktax.utils.PapiManager;
+import tk.taverncraft.quicktax.utils.StatsManager;
+import tk.taverncraft.quicktax.utils.UpdateChecker;
 
 /**
  * The plugin class.
@@ -32,6 +34,10 @@ public class Main extends JavaPlugin {
     // Vault
     private static Economy econ = null;
     private static Permission perms = null;
+
+    public static Main getInstance() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
 
     // Config
     private FileConfiguration config;
@@ -204,5 +210,9 @@ public class Main extends JavaPlugin {
 
     public StorageManager getStorageManager() {
         return this.storageManager;
+    }
+
+    public Object getPluginConfig() {
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 }

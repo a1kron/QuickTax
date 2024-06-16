@@ -35,6 +35,34 @@ debt-commands:
 
 #####################################################################################
 #                                                                                   #
+#                             Faction Tax Configurations                            #
+#                                                                                   #
+#####################################################################################
+
+# This section is for configuring the faction tax deposit feature.
+faction-tax:
+  # Enable or disable the faction tax feature
+  enable-faction-tax: true
+
+  # Percentage of player's balance to be taxed (e.g., 0.1 for 10%)
+  tax-percentage: 0.10
+
+  # If true, the values used for tax-percentage will be applied
+  use-percentage: true
+
+  # Debt mode for faction tax (see above debt-mode description)
+  # 0 - player will not be taxed at all (exempted)
+  # 1 - player will be taxed all current balance (balance will essentially be set to 0)
+  # 2 - player will be taxed the full amount (player will end up with a negative balance)
+  debt-mode: 0
+
+  # Commands to run if a player does not have enough money to pay faction taxes, use %player% for player name
+  # Note: commands also support papi placeholders
+  debt-commands:
+    - broadcast &b%player% &cdoes not have enough money to pay faction taxes!
+
+#####################################################################################
+#                                                                                   #
 #                             Leaderboard Configurations                            #
 #                                                                                   #
 #####################################################################################
